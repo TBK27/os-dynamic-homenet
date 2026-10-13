@@ -1,0 +1,18 @@
+<form>
+    <field>
+        <type>header</type>
+        <label>Dynamic HOME_NET</label>
+    </field>
+    <field>
+        <id>dynamichomenet.enabled</id>
+        <label>Enable</label>
+        <type>checkbox</type>
+        <help>Keep the "Home networks" list of Intrusion Detection up to date with the IPv6 prefix your provider delegates to this firewall. Your own entries in that list are never changed. Turning this off stops further updates, the entry that was already added stays in the list until you remove it.</help>
+    </field>
+    <field>
+        <id>dynamichomenet.interface</id>
+        <label>Interface</label>
+        <type>dropdown</type>
+        <help>The interface that receives the delegated prefix (DHCPv6 prefix delegation), usually WAN. The prefix is read from this interface whenever it changes.</help>
+    </field>
+</form>

@@ -1,0 +1,46 @@
+# Claude Code
+.claude/
+CLAUDE.local.md
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Local env / secrets
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Logs and temp
+*.log
+*.tmp
+*.bak
+*.orig
+*.rej
+
+# PHP / tooling
+vendor/
+composer.lock
+.phpunit.result.cache
+.php-cs-fixer.cache
+
+# Build output (FreeBSD pkg / plugin builds)
+work/
+*.pkg
+*.txz
+*.tbz
+
+# Downloaded upstream source used for research (never commit)
+research/
+upstream/

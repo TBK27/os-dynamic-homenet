@@ -1,0 +1,22 @@
+Keeps the Home networks list of Intrusion Detection (Suricata) current
+with the IPv6 prefix that your provider delegates to this firewall
+(DHCPv6 prefix delegation).
+
+When the delegated prefix changes and the Home networks list does not
+follow, the IPv6 side of your network is no longer recognised as "home"
+and rules that depend on HOME_NET silently stop matching. This plugin
+adds the current prefix of the selected interface to the list and
+replaces it when the prefix changes.
+
+The plugin is opt-in and only acts on a real change. It never restarts
+Suricata (the rules are reloaded) and never touches the entries you
+added yourself.
+
+WWW: https://github.com/TBK27/os-dynamic-homenet
+
+Plugin Changelog
+================
+
+1.0
+
+* Initial release

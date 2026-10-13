@@ -1,0 +1,9 @@
+<acl>
+    <page-services-dynamichomenet>
+        <name>Services: Intrusion Detection: Dynamic HOME_NET</name>
+        <patterns>
+            <pattern>ui/dynamichomenet/*</pattern>
+            <pattern>api/dynamichomenet/*</pattern>
+        </patterns>
+    </page-services-dynamichomenet>
+</acl>

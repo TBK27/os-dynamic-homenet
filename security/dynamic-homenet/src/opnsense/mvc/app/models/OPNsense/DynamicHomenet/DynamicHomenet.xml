@@ -1,0 +1,28 @@
+<model>
+    <mount>//OPNsense/DynamicHomenet</mount>
+    <version>1.0.0</version>
+    <description>Dynamic HOME_NET settings</description>
+    <items>
+        <enabled type="BooleanField">
+            <Default>0</Default>
+            <Required>Y</Required>
+        </enabled>
+        <interface type="InterfaceField">
+            <Required>Y</Required>
+            <Default>wan</Default>
+            <filters>
+                <enable>/^(?!0).*$/</enable>
+                <type>/(?s)^((?!group).)*$/</type>
+            </filters>
+        </interface>
+        <!--
+            Runtime state, not exposed in the form. "observed" is the prefix we last saw on the
+            interface (the debounce value), "owned" is what we actually inserted into the
+            Home networks list, so only those entries are ever removed again.
+        -->
+        <state>
+            <observed_ipv6 type="TextField"/>
+            <owned_ipv6 type="TextField"/>
+        </state>
+    </items>
+</model>

@@ -1,0 +1,2 @@
+# Plugin files get installed on FreeBSD, keep LF everywhere (shebang scripts break with CRLF)
+* text=auto eol=lf

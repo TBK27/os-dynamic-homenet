@@ -1,0 +1,7 @@
+<menu>
+    <Services>
+        <IDS>
+            <DynamicHomenet VisibleName="Dynamic Home Network" order="30" url="/ui/dynamichomenet"/>
+        </IDS>
+    </Services>
+</menu>
