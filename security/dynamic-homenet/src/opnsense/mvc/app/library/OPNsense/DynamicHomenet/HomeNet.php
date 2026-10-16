@@ -175,4 +175,14 @@ class HomeNet
 
         return $prefixes;
     }
+
+    /**
+     * Primary IPv4 address of an interface as /32, or nothing while it has none.
+     */
+    public static function observedIPv4(string $interface): array
+    {
+        list ($ip) = interfaces_primary_address($interface);
+
+        return is_ipaddrv4($ip) ? self::normalizeSet([$ip]) : [];
+    }
 }

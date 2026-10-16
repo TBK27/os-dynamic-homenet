@@ -7,12 +7,18 @@
         <id>dynamichomenet.enabled</id>
         <label>Enable</label>
         <type>checkbox</type>
-        <help>Keep the "Home networks" list of Intrusion Detection up to date with the IPv6 prefix your provider delegates to this firewall. Your own entries in that list are never changed. Turning this off stops further updates, the entry that was already added stays in the list until you remove it.</help>
+        <help>Keep the "Home networks" list of Intrusion Detection up to date with the addresses your provider gives this firewall. Your own entries in that list are never changed. Turning this off stops further updates, the entries that were already added stay in the list until you remove them.</help>
     </field>
     <field>
         <id>dynamichomenet.interface</id>
         <label>Interface</label>
         <type>dropdown</type>
-        <help>The interface that receives the delegated prefix (DHCPv6 prefix delegation), usually WAN. The prefix is read from this interface whenever it changes.</help>
+        <help>The interface that receives the delegated IPv6 prefix (DHCPv6 prefix delegation) and, if enabled below, the IPv4 address to follow. Usually WAN.</help>
+    </field>
+    <field>
+        <id>dynamichomenet.sync_ipv4</id>
+        <label>Also follow the IPv4 address</label>
+        <type>checkbox</type>
+        <help>Also keep the current IPv4 address of this interface (a single address) in the Home networks list, and replace it when your provider changes it. Useful when your provider gives the WAN a private address (for example 10.x.x.x or 100.64.x.x) that is not covered by your Home networks, so that traffic to and from the firewall's own address is still recognised as yours. Leave it off if your Home networks already cover that address. The IPv6 prefix is always followed.</help>
     </field>
 </form>

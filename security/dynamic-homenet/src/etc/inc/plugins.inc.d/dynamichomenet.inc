@@ -27,8 +27,9 @@
  */
 
 /*
- * Two hooks are needed. A changed DHCPv6-PD prefix arrives via rc.newwanipv6 which only runs the
- * "newwanip" hook (with the address family), "updateip" is only called on interface reconfigures.
+ * Two hooks are needed. A changed DHCPv6-PD prefix arrives via rc.newwanipv6 and a changed IPv4
+ * address via rc.newwanip, both only run the "newwanip" hook (with the address family), "updateip"
+ * is only called on interface reconfigures.
  * The ":N" suffix is the argument count handed to the handler, see plugins_configure().
  */
 function dynamichomenet_configure()
@@ -39,14 +40,14 @@ function dynamichomenet_configure()
     ];
 }
 
-/* args: $verbose, [$interfaces], $family (inet / inet6), only the IPv6 run is of interest */
+/* args: $verbose, [$interfaces], $family (inet / inet6) */
 function dynamichomenet_newwanip($verbose = false, $interfaces = null, $family = null)
 {
-    if ($family !== 'inet6' || !plugins_argument_map($interfaces)) {
+    if (!in_array($family, ['inet', 'inet6'], true) || !plugins_argument_map($interfaces)) {
         return;
     }
 
-    dynamichomenet_dispatch($interfaces);
+    dynamichomenet_dispatch($interfaces, [$family]);
 }
 
 /* args: $verbose, [$interfaces], no address family is given */
@@ -56,16 +57,17 @@ function dynamichomenet_updateip($verbose = false, $interfaces = null)
         return;
     }
 
-    dynamichomenet_dispatch($interfaces);
+    dynamichomenet_dispatch($interfaces, ['inet6', 'inet']);
 }
 
 /*
- * Cheap pre-filter so unrelated invocations cost nothing: opted in, our interface and a delegated
- * prefix that differs from the last sync. The sync script repeats the comparison under its own
- * lock, this only decides whether it is worth starting it (detached, the caller is a network
- * event handler and must not wait for Suricata).
+ * Cheap pre-filter so unrelated invocations cost nothing: opted in, our interface, a family we
+ * track and a value that differs from the last sync. The sync script repeats the comparison under
+ * its own lock, this only decides whether it is worth starting it (detached, the caller is a
+ * network event handler and must not wait for Suricata). The IPv6 prefix is always followed, the
+ * IPv4 address only when it was asked for.
  */
-function dynamichomenet_dispatch($interfaces)
+function dynamichomenet_dispatch($interfaces, $families)
 {
     global $config;
 
@@ -76,14 +78,24 @@ function dynamichomenet_dispatch($interfaces)
         return;
     }
 
-    $observed = \OPNsense\DynamicHomenet\HomeNet::observedIPv6($interface);
-    $last = $cfg['state']['observed_ipv6'] ?? '';
+    foreach ($families as $family) {
+        if ($family === 'inet6') {
+            $observed = \OPNsense\DynamicHomenet\HomeNet::observedIPv6($interface);
+            $last = $cfg['state']['observed_ipv6'] ?? '';
+        } elseif ($family === 'inet' && ($cfg['sync_ipv4'] ?? '0') === '1') {
+            $observed = \OPNsense\DynamicHomenet\HomeNet::observedIPv4($interface);
+            $last = $cfg['state']['observed_ipv4'] ?? '';
+        } else {
+            continue;
+        }
 
-    if (empty($observed) || !\OPNsense\DynamicHomenet\HomeNet::hasChanged($observed, $last)) {
-        log_msg("dynamichomenet: prefix on {$interface} unchanged, nothing to do", LOG_DEBUG);
+        if (empty($observed) || !\OPNsense\DynamicHomenet\HomeNet::hasChanged($observed, $last)) {
+            log_msg("dynamichomenet: {$family} on {$interface} unchanged, nothing to do", LOG_DEBUG);
+            continue;
+        }
+
+        log_msg("dynamichomenet: {$family} on {$interface} changed, starting sync", LOG_INFO);
+        configd_run('dynamichomenet sync', true);
         return;
     }
-
-    log_msg("dynamichomenet: prefix on {$interface} changed, starting sync", LOG_INFO);
-    configd_run('dynamichomenet sync', true);
 }

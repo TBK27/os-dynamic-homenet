@@ -15,13 +15,19 @@
                 <type>/(?s)^((?!group).)*$/</type>
             </filters>
         </interface>
+        <sync_ipv4 type="BooleanField">
+            <Default>0</Default>
+            <Required>Y</Required>
+        </sync_ipv4>
         <!--
-            Runtime state, not exposed in the form. "observed" is the prefix we last saw on the
-            interface (the debounce value), "owned" is what we actually inserted into the
+            Runtime state, not exposed in the form. "observed" is the prefix or address we last saw
+            on the interface (the debounce value), "owned" is what we actually inserted into the
             Home networks list, so only those entries are ever removed again.
         -->
         <state>
+            <observed_ipv4 type="TextField"/>
             <observed_ipv6 type="TextField"/>
+            <owned_ipv4 type="TextField"/>
             <owned_ipv6 type="TextField"/>
         </state>
     </items>

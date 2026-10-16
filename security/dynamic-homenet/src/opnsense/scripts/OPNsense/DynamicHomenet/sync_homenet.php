@@ -28,10 +28,10 @@
  */
 
 /*
- * Compare the delegated IPv6 prefix of the selected interface with what was synced last and, only
- * on a real change, replace our entries in the Suricata Home networks list and reload (never
- * restart) Suricata. This comparison is the only debounce, the hooks that call us fire on any
- * interface reconfigure.
+ * Compare the delegated IPv6 prefix (and, when asked for, the IPv4 address) of the selected
+ * interface with what was synced last and, only on a real change, replace our entries in the
+ * Suricata Home networks list and reload (never restart) Suricata. This comparison is the only
+ * debounce, the hooks that call us fire on any interface reconfigure.
  *
  * Usage: sync_homenet.php [--force]    (--force syncs even if nothing changed)
  */
@@ -71,29 +71,53 @@ function dynamichomenet_update_config(bool $force): bool
         }
 
         $interface = (string)$mdl->interface;
-        $observed = HomeNet::observedIPv6($interface);
-        if (empty($observed)) {
-            /* ifctl clears the prefix during a reconfigure, keep what we have until a new one shows up */
-            dynamichomenet_log(LOG_DEBUG, "nothing observed on {$interface}, keeping current entries");
-            return false;
-        }
-
-        $last = (string)$mdl->state->observed_ipv6;
-        if (!$force && !HomeNet::hasChanged($observed, $last)) {
-            dynamichomenet_log(LOG_DEBUG, "prefix on {$interface} unchanged, nothing to do");
-            return false;
-        }
-
         $ids = new IDS();
         $before = (string)$ids->general->homenet;
-        list ($homenet, $owned) = HomeNet::replaceOwned(
-            $before,
-            HomeNet::parseList((string)$mdl->state->owned_ipv6),
-            $observed
-        );
+        $homenet = $before;
+        $dirty = false;
 
-        $mdl->state->observed_ipv6 = implode(',', $observed);
-        $mdl->state->owned_ipv6 = implode(',', $owned);
+        /* each family has its own slot in the list, the IPv6 prefix is always followed, IPv4 on request */
+        $families = [
+            'ipv6' => [true, 'observedIPv6', 'prefix'],
+            'ipv4' => [(string)$mdl->sync_ipv4 === '1', 'observedIPv4', 'address'],
+        ];
+
+        foreach ($families as $family => [$enabled, $fetch, $what]) {
+            if (!$enabled) {
+                continue;
+            }
+
+            $observed = HomeNet::$fetch($interface);
+            if (empty($observed)) {
+                /* ifctl clears the prefix during a reconfigure, keep what we have until a new one shows up */
+                dynamichomenet_log(LOG_DEBUG, "{$family}: nothing observed on {$interface}, keeping current entries");
+                continue;
+            }
+
+            $last = (string)$mdl->state->{"observed_{$family}"};
+            if (!$force && !HomeNet::hasChanged($observed, $last)) {
+                dynamichomenet_log(LOG_DEBUG, "{$family}: {$what} on {$interface} unchanged, nothing to do");
+                continue;
+            }
+
+            list ($homenet, $owned) = HomeNet::replaceOwned(
+                $homenet,
+                HomeNet::parseList((string)$mdl->state->{"owned_{$family}"}),
+                $observed
+            );
+
+            $mdl->state->{"observed_{$family}"} = implode(',', $observed);
+            $mdl->state->{"owned_{$family}"} = implode(',', $owned);
+            $dirty = true;
+            dynamichomenet_log(
+                LOG_NOTICE,
+                "{$interface} {$family} {$what} now " . implode(',', $observed) . ", was '{$last}'"
+            );
+        }
+
+        if (!$dirty) {
+            return false;
+        }
 
         $homenetChanged = $homenet !== $before;
         if ($homenetChanged) {
@@ -106,7 +130,6 @@ function dynamichomenet_update_config(bool $force): bool
             $ids->serializeToConfig();
         }
         $config->save();
-        dynamichomenet_log(LOG_NOTICE, "{$interface} prefix now " . implode(',', $observed) . ", was '{$last}'");
 
         return $homenetChanged && (string)$ids->general->enabled === '1';
     } catch (\Exception $e) {

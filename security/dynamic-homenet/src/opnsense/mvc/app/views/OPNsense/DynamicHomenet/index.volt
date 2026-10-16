@@ -32,6 +32,7 @@ $(document).ready(function() {
                 return;
             }
             $("#state_ipv6").text(data.dynamichomenet.state.owned_ipv6 || "-");
+            $("#state_ipv4").text(data.dynamichomenet.state.owned_ipv4 || "-");
         });
     }
 
@@ -74,9 +75,10 @@ $(document).ready(function() {
     <div id="settings" class="tab-pane fade in active">
         {{ partial("layout_partials/base_form", ['fields': generalForm, 'id': 'frm_GeneralSettings']) }}
         <div class="col-md-12">
-            <h3>{{ lang._('Prefix currently managed in Home networks') }}</h3>
+            <h3>{{ lang._('Entries currently managed in Home networks') }}</h3>
             <table class="table table-condensed">
                 <tr><td style="width:15%">{{ lang._('IPv6 prefix') }}</td><td id="state_ipv6">-</td></tr>
+                <tr><td>{{ lang._('IPv4 address') }}</td><td id="state_ipv4">-</td></tr>
             </table>
             <button class="btn btn-primary" id="applyAct"
                     data-endpoint="/api/dynamichomenet/service/sync"
@@ -105,19 +107,20 @@ $(document).ready(function() {
             <h3>{{ lang._('What this does') }}</h3>
             <p>{{ lang._('Intrusion Detection (Suricata) uses the "Home networks" list to decide which addresses are yours. With IPv6 your provider can change the prefix delegated to this firewall at any time, for example after a reconnect. When that happens the list no longer covers your LAN and your own devices are treated as outside traffic, so rules that depend on the Home networks silently stop matching.') }}</p>
             <p>{{ lang._('This plugin adds the delegated IPv6 prefix of the selected interface to the Home networks list and replaces it when the prefix changes.') }}</p>
+            <p>{{ lang._('Optionally it also keeps the current IPv4 address of that interface in the list. This is meant for providers that give the WAN a private address, which is not covered by your Home networks and changes from time to time. The address of the firewall itself is then still recognised as yours.') }}</p>
 
             <h3>{{ lang._('What it will not do') }}</h3>
             <ul>
                 <li>{{ lang._('It does nothing until it is enabled.') }}</li>
                 <li>{{ lang._('It never restarts Suricata, the rules are reloaded.') }}</li>
-                <li>{{ lang._('It never changes or removes entries you added yourself, only the one it added.') }}</li>
+                <li>{{ lang._('It never changes or removes entries you added yourself, only the ones it added.') }}</li>
                 <li>{{ lang._('It does nothing when the prefix has not changed, so ordinary interface reconfigures cause no reload.') }}</li>
             </ul>
 
             <h3>{{ lang._('Good to know') }}</h3>
             <ul>
                 <li>{{ lang._('Intrusion Detection has to be enabled. If Suricata is not running, the list is still updated and is used when it starts.') }}</li>
-                <li>{{ lang._('While the interface has no delegated prefix (for example during a reconnect) nothing is changed. The previous entry stays until a new prefix arrives.') }}</li>
+                <li>{{ lang._('While the interface has no delegated prefix or address (for example during a reconnect) nothing is changed. The previous entry stays until a new one arrives.') }}</li>
                 <li>{{ lang._('Turning the plugin off does not remove the entry it added. Remove it from the Home networks list if you no longer want it.') }}</li>
                 <li>{{ lang._('Activity is logged under the name "dynamichomenet" in System > Log Files > General.') }}</li>
             </ul>

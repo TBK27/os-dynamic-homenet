@@ -86,6 +86,14 @@ list ($list7, $owned7) = HomeNet::replaceOwned($admin . ',2001:db8:1::/56', ['20
 check('multiple delegated prefixes', $admin . ',2001:db8:a::/56,2001:db8:b::/56', $list7);
 check('multiple prefixes all owned', ['2001:db8:a::/56', '2001:db8:b::/56'], $owned7);
 
+/* the two families keep independent slots in the same list */
+list ($v6list, $v6owned) = HomeNet::replaceOwned($admin, [], ['2001:db8:1200::/56']);
+list ($bothlist, $v4owned) = HomeNet::replaceOwned($v6list, [], ['203.0.113.7']);
+list ($v4moved, $v4owned2) = HomeNet::replaceOwned($bothlist, $v4owned, ['203.0.113.99']);
+check('v4 change leaves v6 slot alone', $admin . ',2001:db8:1200::/56,203.0.113.99/32', $v4moved);
+list ($v6moved) = HomeNet::replaceOwned($v4moved, $v6owned, ['2001:db8:9900::/56']);
+check('v6 change leaves v4 slot alone', $admin . ',203.0.113.99/32,2001:db8:9900::/56', $v6moved);
+
 list ($untouched) = HomeNet::replaceOwned($admin, ['192.168.0.0/16'], []);
 check('previously owned entry removed even when nothing new', '10.0.0.0/8,172.16.0.0/12', $untouched);
 
