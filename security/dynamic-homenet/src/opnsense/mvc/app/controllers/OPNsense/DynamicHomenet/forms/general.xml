@@ -1,7 +1,7 @@
 <form>
     <field>
         <type>header</type>
-        <label>Dynamic HOME_NET</label>
+        <label>Dynamic Home Network</label>
     </field>
     <field>
         <id>dynamichomenet.enabled</id>

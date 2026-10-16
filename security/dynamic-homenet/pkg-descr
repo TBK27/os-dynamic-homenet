@@ -22,6 +22,11 @@ WWW: https://github.com/TBK27/os-dynamic-homenet
 Plugin Changelog
 ================
 
+1.3
+
+* Package renamed to os-dynamic-homenet to match the repository
+* One display name, Dynamic Home Network, in the interface and the log
+
 1.2
 
 * Separate options to follow the IPv6 prefix and the IPv4 address

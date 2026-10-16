@@ -91,11 +91,11 @@ function dynamichomenet_dispatch($interfaces, $families)
         }
 
         if (empty($observed) || !\OPNsense\DynamicHomenet\HomeNet::hasChanged($observed, $last)) {
-            log_msg("dynamichomenet: {$family} on {$interface} unchanged, nothing to do", LOG_DEBUG);
+            log_msg("dynamic-homenet: {$family} on {$interface} unchanged, nothing to do", LOG_DEBUG);
             continue;
         }
 
-        log_msg("dynamichomenet: {$family} on {$interface} changed, starting sync", LOG_INFO);
+        log_msg("dynamic-homenet: {$family} on {$interface} changed, starting sync", LOG_INFO);
         configd_run('dynamichomenet sync', true);
         return;
     }

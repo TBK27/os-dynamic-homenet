@@ -125,7 +125,7 @@ $(document).ready(function() {
                 <li>{{ lang._('Intrusion Detection has to be enabled. If Suricata is not running, the list is still updated and is used when it starts.') }}</li>
                 <li>{{ lang._('While the interface has no delegated prefix or address (for example during a reconnect) nothing is changed. The previous entry stays until a new one arrives.') }}</li>
                 <li>{{ lang._('Turning the plugin off does not remove the entry it added. Remove it from the Home networks list if you no longer want it.') }}</li>
-                <li>{{ lang._('Activity is logged under the name "dynamichomenet" in System > Log Files > General.') }}</li>
+                <li>{{ lang._('Activity is logged under the name "dynamic-homenet" in System > Log Files > General.') }}</li>
             </ul>
             <br/>
         </div>

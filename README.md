@@ -1,11 +1,11 @@
-<h1 align="center">os-dynamichomenet</h1>
+<h1 align="center">os-dynamic-homenet</h1>
 
 <p align="center">
   <b>Keep Suricata's Home networks in step with the addresses your provider gives your firewall.</b>
 </p>
 
 <p align="center">
-  <a href="security/dynamic-homenet/pkg-descr"><img alt="Version 1.2" src="https://img.shields.io/badge/version-1.2-2ea44f"></a>
+  <a href="security/dynamic-homenet/pkg-descr"><img alt="Version 1.3" src="https://img.shields.io/badge/version-1.3-2ea44f"></a>
   <a href="https://opnsense.org"><img alt="OPNsense 26.7" src="https://img.shields.io/badge/OPNsense-26.7-d94f00"></a>
   <a href="LICENSE"><img alt="License BSD 2-Clause" src="https://img.shields.io/badge/license-BSD--2--Clause-blue"></a>
 </p>
@@ -82,13 +82,13 @@ versions are untested.
 On the firewall, as root:
 
 ```sh
-pkg add os-dynamichomenet-<version>.pkg
+pkg add os-dynamic-homenet-<version>.pkg
 ```
 
 The package restarts the configuration daemon and rebuilds the menu on its own. Reload the web interface and
 open **Services > Intrusion Detection > Dynamic Home Network**.
 
-Once the plugin is published in a package repository, install `os-dynamichomenet` from
+Once the plugin is published in a package repository, install `os-dynamic-homenet` from
 **System > Firmware > Plugins** instead.
 
 ### Upgrading
@@ -155,12 +155,12 @@ If you add another network later, add it to the list yourself.
 The entries appear on the page and in the Home networks list. From then on the plugin follows your provider
 by itself.
 
-Activity is logged under the name `dynamichomenet` (**System > Log Files > General**). A sync looks like:
+Activity is logged under the name `dynamic-homenet` (**System > Log Files > General**). A sync looks like:
 
 ```
-dynamichomenet: wan ipv6 prefix now 2001:db8:1200::/56, was '2001:db8:3400::/56'
-dynamichomenet: wan ipv4 address now 203.0.113.7/32, was '203.0.113.5/32'
-dynamichomenet: HOME_NET updated, Suricata rules reloaded
+dynamic-homenet: wan ipv6 prefix now 2001:db8:1200::/56, was '2001:db8:3400::/56'
+dynamic-homenet: wan ipv4 address now 203.0.113.7/32, was '203.0.113.5/32'
+dynamic-homenet: HOME_NET updated, Suricata rules reloaded
 ```
 
 Every sync that changes the list is saved as a normal configuration revision, so it shows up in the usual
@@ -218,18 +218,18 @@ All of them are kept in the plugin's IPv6 entry and replaced together.
 - **Nothing changes after Apply.** Check that **Enable** is ticked, that the right interface is selected,
   and that Intrusion Detection is enabled. The interface must actually hold a delegated prefix or an IPv4
   address.
-- **See what the plugin did.** Filter **System > Log Files > General** for `dynamichomenet`. A plugin that has
+- **See what the plugin did.** Filter **System > Log Files > General** for `dynamic-homenet`. A plugin that has
   nothing to do stays silent.
 - **An entry is missing.** Press **Sync now**. It restores the plugin's entries even when no value changed.
 - **A value looks out of date.** Press **Sync now** and check the log again.
 
 When reporting a problem, include the OPNsense version, which options are ticked, and the
-`dynamichomenet` log lines.
+`dynamic-homenet` log lines.
 
 ## Uninstall
 
 Disable the plugin and remove its entries from the Home networks list, then remove the package
-(**System > Firmware > Plugins**, or `pkg delete os-dynamichomenet`).
+(**System > Firmware > Plugins**, or `pkg delete os-dynamic-homenet`).
 
 If you installed it by hand:
 

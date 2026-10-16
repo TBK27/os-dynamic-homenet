@@ -48,11 +48,11 @@ use OPNsense\IDS\IDS;
 
 /*
  * The configuration models re-open the syslog connection under their own name, so open ours again
- * for every message to keep all of them tagged "dynamichomenet".
+ * for every message to keep all of them tagged "dynamic-homenet".
  */
 function dynamichomenet_log(int $priority, string $message): void
 {
-    openlog('dynamichomenet', LOG_ODELAY | LOG_PID, LOG_USER);
+    openlog('dynamic-homenet', LOG_ODELAY | LOG_PID, LOG_USER);
     syslog($priority, $message);
 }
 

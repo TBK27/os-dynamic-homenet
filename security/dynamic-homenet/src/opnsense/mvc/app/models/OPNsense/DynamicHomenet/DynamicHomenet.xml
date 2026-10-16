@@ -1,7 +1,7 @@
 <model>
     <mount>//OPNsense/DynamicHomenet</mount>
     <version>1.0.0</version>
-    <description>Dynamic HOME_NET settings</description>
+    <description>Dynamic Home Network settings</description>
     <items>
         <enabled type="BooleanField">
             <Default>0</Default>
