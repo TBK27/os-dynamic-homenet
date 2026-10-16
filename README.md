@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <img alt="Version 1.2" src="https://img.shields.io/badge/version-1.2-2ea44f">
-  <img alt="OPNsense 26.7" src="https://img.shields.io/badge/OPNsense-26.7-d94f00">
-  <img alt="License BSD 2-Clause" src="https://img.shields.io/badge/license-BSD--2--Clause-blue">
+  <a href="security/dynamic-homenet/pkg-descr"><img alt="Version 1.2" src="https://img.shields.io/badge/version-1.2-2ea44f"></a>
+  <a href="https://opnsense.org"><img alt="OPNsense 26.7" src="https://img.shields.io/badge/OPNsense-26.7-d94f00"></a>
+  <a href="LICENSE"><img alt="License BSD 2-Clause" src="https://img.shields.io/badge/license-BSD--2--Clause-blue"></a>
 </p>
 
 An OPNsense plugin that automatically keeps the **Home networks** (`HOME_NET`) list of Intrusion Detection
