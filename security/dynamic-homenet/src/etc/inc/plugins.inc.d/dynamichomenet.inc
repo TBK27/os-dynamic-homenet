@@ -64,8 +64,9 @@ function dynamichomenet_updateip($verbose = false, $interfaces = null)
  * Cheap pre-filter so unrelated invocations cost nothing: opted in, our interface, a family we
  * track and a value that differs from the last sync. The sync script repeats the comparison under
  * its own lock, this only decides whether it is worth starting it (detached, the caller is a
- * network event handler and must not wait for Suricata). The IPv6 prefix is always followed, the
- * IPv4 address only when it was asked for.
+ * network event handler and must not wait for Suricata). The IPv6 prefix is followed unless it was
+ * switched off (an installation from before the option existed has nothing saved, which means on),
+ * the IPv4 address only when it was asked for.
  */
 function dynamichomenet_dispatch($interfaces, $families)
 {
@@ -79,7 +80,7 @@ function dynamichomenet_dispatch($interfaces, $families)
     }
 
     foreach ($families as $family) {
-        if ($family === 'inet6') {
+        if ($family === 'inet6' && ($cfg['sync_ipv6'] ?? '1') !== '0') {
             $observed = \OPNsense\DynamicHomenet\HomeNet::observedIPv6($interface);
             $last = $cfg['state']['observed_ipv6'] ?? '';
         } elseif ($family === 'inet' && ($cfg['sync_ipv4'] ?? '0') === '1') {

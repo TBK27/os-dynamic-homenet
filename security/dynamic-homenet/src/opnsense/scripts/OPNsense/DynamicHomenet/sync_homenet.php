@@ -76,9 +76,9 @@ function dynamichomenet_update_config(bool $force): bool
         $homenet = $before;
         $dirty = false;
 
-        /* each family has its own slot in the list, the IPv6 prefix is always followed, IPv4 on request */
+        /* each family has its own slot in the list and is followed when its option is switched on */
         $families = [
-            'ipv6' => [true, 'observedIPv6', 'prefix'],
+            'ipv6' => [(string)$mdl->sync_ipv6 === '1', 'observedIPv6', 'prefix'],
             'ipv4' => [(string)$mdl->sync_ipv4 === '1', 'observedIPv4', 'address'],
         ];
 

@@ -25,15 +25,25 @@ networks list, and replaces it when the prefix changes.
   prefix cause no config save and no reload. While the interface briefly has no prefix (during a
   reconnect), nothing is touched.
 
-Optionally the plugin also keeps the current IPv4 address of that interface in the list. That is for
-providers that give the WAN a private address (for example 10.x.x.x) which you have left out of your
-Home networks and which changes from time to time, so that the firewall's own address is still
-recognised as yours. For ordinary IPv4 ranges nothing is needed: enter them once as networks.
+You choose what to follow: the **IPv6 prefix** (on by default, recommended) and/or the **IPv4 address** of
+the interface (off by default). The IPv4 address is meant for providers that give the WAN a private address
+that changes from time to time, so that the firewall itself is still recognised as yours.
+
+### Recommended setup for the best security
+
+The default Home networks list contains the whole private IPv4 ranges `192.168.0.0/16`, `10.0.0.0/8` and
+`172.16.0.0/12`. They are far broader than most networks. For example `10.0.0.0/8` also covers addresses on
+your provider side of the connection, so everything there is treated as your own network and skipped by the
+rules that look for attacks coming from outside.
+
+We suggest removing all the default IPv4 entries from the Home networks list and adding only the subnets you
+really use by hand. Let this plugin cover the rest: the IPv6 prefix and, with the IPv4 option, the address of
+the firewall itself, which usually changes and cannot be entered by hand.
 
 ## Requirements
 
 - OPNsense with Intrusion Detection enabled
-- An interface that receives a delegated prefix (DHCPv6-PD)
+- An interface that receives a delegated IPv6 prefix (DHCPv6-PD) and/or an IPv4 address to follow
 
 Tested on OPNsense 26.7.6 with Suricata 8.0.7.
 
@@ -62,8 +72,9 @@ and reload the web interface.
 ## Use
 
 1. Tick **Enable** and choose the interface that receives the delegated prefix (usually WAN).
-   Tick **Also follow the IPv4 address** only if you want that as well.
-2. Press **Apply**.
+2. Choose what to follow: **Follow the IPv6 prefix** (on by default, recommended) and, if you want it,
+   **Follow the IPv4 address**.
+3. Press **Apply**.
 
 The prefix (and address) now appear on the page and in **Services > Intrusion Detection > Administration >
 Settings > Home networks**. From then on the plugin follows the prefix by itself.

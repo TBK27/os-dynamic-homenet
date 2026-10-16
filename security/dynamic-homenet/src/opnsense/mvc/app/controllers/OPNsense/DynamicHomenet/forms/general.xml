@@ -13,12 +13,18 @@
         <id>dynamichomenet.interface</id>
         <label>Interface</label>
         <type>dropdown</type>
-        <help>The interface that receives the delegated IPv6 prefix (DHCPv6 prefix delegation) and, if enabled below, the IPv4 address to follow. Usually WAN.</help>
+        <help>The interface that receives the delegated IPv6 prefix (DHCPv6 prefix delegation) and whose IPv4 address can be followed. Usually WAN.</help>
+    </field>
+    <field>
+        <id>dynamichomenet.sync_ipv6</id>
+        <label>Follow the IPv6 prefix</label>
+        <type>checkbox</type>
+        <help>Keep the IPv6 prefix that your provider delegates to this firewall in the Home networks list, and replace it when the prefix changes. Recommended: without it your IPv6 devices are no longer recognised as yours when the provider changes the prefix.</help>
     </field>
     <field>
         <id>dynamichomenet.sync_ipv4</id>
-        <label>Also follow the IPv4 address</label>
+        <label>Follow the IPv4 address</label>
         <type>checkbox</type>
-        <help>Also keep the current IPv4 address of this interface (a single address) in the Home networks list, and replace it when your provider changes it. Useful when your provider gives the WAN a private address (for example 10.x.x.x or 100.64.x.x) that is not covered by your Home networks, so that traffic to and from the firewall's own address is still recognised as yours. Leave it off if your Home networks already cover that address. The IPv6 prefix is always followed.</help>
+        <help>Keep the current IPv4 address of this interface (a single address) in the Home networks list, and replace it when your provider changes it. This covers the address of the firewall itself, which usually changes. For the best security also read the recommended setup on the Information tab.</help>
     </field>
 </form>

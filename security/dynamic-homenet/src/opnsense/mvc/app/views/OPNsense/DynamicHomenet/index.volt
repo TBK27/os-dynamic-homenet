@@ -106,8 +106,11 @@ $(document).ready(function() {
         <div class="col-md-12">
             <h3>{{ lang._('What this does') }}</h3>
             <p>{{ lang._('Intrusion Detection (Suricata) uses the "Home networks" list to decide which addresses are yours. With IPv6 your provider can change the prefix delegated to this firewall at any time, for example after a reconnect. When that happens the list no longer covers your LAN and your own devices are treated as outside traffic, so rules that depend on the Home networks silently stop matching.') }}</p>
-            <p>{{ lang._('This plugin adds the delegated IPv6 prefix of the selected interface to the Home networks list and replaces it when the prefix changes.') }}</p>
-            <p>{{ lang._('Optionally it also keeps the current IPv4 address of that interface in the list. This is meant for providers that give the WAN a private address, which is not covered by your Home networks and changes from time to time. The address of the firewall itself is then still recognised as yours.') }}</p>
+            <p>{{ lang._('This plugin adds the delegated IPv6 prefix of the selected interface to the Home networks list and replaces it when the prefix changes. It can also do the same for the current IPv4 address of that interface. Each of the two can be switched on or off.') }}</p>
+
+            <h3>{{ lang._('Recommended setup for the best security') }}</h3>
+            <p>{{ lang._('The default Home networks list contains the whole private IPv4 ranges 192.168.0.0/16, 10.0.0.0/8 and 172.16.0.0/12. They are far broader than most networks. For example 10.0.0.0/8 also covers addresses on your provider side of the connection, so everything there is treated as your own network and skipped by the rules that look for attacks coming from outside.') }}</p>
+            <p>{{ lang._('We suggest removing all the default IPv4 entries from the Home networks list and adding only the subnets you really use by hand. Let this plugin cover the rest: the IPv6 prefix and, with the IPv4 option, the address of the firewall itself, which usually changes and cannot be entered by hand.') }}</p>
 
             <h3>{{ lang._('What it will not do') }}</h3>
             <ul>

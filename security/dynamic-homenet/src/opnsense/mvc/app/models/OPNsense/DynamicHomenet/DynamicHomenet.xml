@@ -15,6 +15,10 @@
                 <type>/(?s)^((?!group).)*$/</type>
             </filters>
         </interface>
+        <sync_ipv6 type="BooleanField">
+            <Default>1</Default>
+            <Required>Y</Required>
+        </sync_ipv6>
         <sync_ipv4 type="BooleanField">
             <Default>0</Default>
             <Required>Y</Required>

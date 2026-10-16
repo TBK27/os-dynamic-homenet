@@ -9,8 +9,9 @@ adds the current prefix of the selected interface to the list and
 replaces it when the prefix changes.
 
 Optionally it also keeps the current IPv4 address of that interface in
-the list, for providers that give the WAN a private address that is not
-covered by your Home networks and changes from time to time.
+the list, for providers that give the WAN a private address that changes
+from time to time, so that the firewall itself is still recognised as
+yours. The IPv6 prefix and the IPv4 address can be followed independently.
 
 The plugin is opt-in and only acts on a real change. It never restarts
 Suricata (the rules are reloaded) and never touches the entries you
@@ -20,6 +21,11 @@ WWW: https://github.com/TBK27/os-dynamic-homenet
 
 Plugin Changelog
 ================
+
+1.2
+
+* Separate options to follow the IPv6 prefix and the IPv4 address
+* Clearer help texts and a recommended setup on the Information tab
 
 1.1
 
