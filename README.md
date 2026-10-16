@@ -14,7 +14,7 @@ An OPNsense plugin that automatically keeps the **Home networks** (`HOME_NET`) l
 (Suricata) current with your delegated **IPv6 prefix** and, optionally, your **IPv4 WAN address**. When your
 provider renumbers you, the list follows, and Suricata keeps recognising your network as yours.
 
-**Contents:** [Why](#why-this-exists) · [Features](#features) · [Requirements](#requirements) ·
+**Contents:** [Why](#why-this-exists) · [Features](#features) · [Screenshots](#screenshots) · [Requirements](#requirements) ·
 [Installation](#installation) · [Configuration](#configuration) · [Recommended setup](#recommended-setup) ·
 [Usage](#usage) · [How it works](#how-it-works) · [FAQ](#faq) · [Troubleshooting](#troubleshooting) ·
 [Uninstall](#uninstall) · [Development](#development) · [License](#license)
@@ -49,6 +49,18 @@ This plugin watches for those changes and updates the list for you.
   (during a reconnect), nothing is touched.
 - **Opt-in.** Nothing happens until you enable it.
 - **Built in documentation.** Help texts on every setting and an Information tab on the settings page.
+
+## Screenshots
+
+**Settings**
+
+<img src="screenshots/settings.png" alt="The settings page with the four options and the entries the plugin manages" width="860">
+
+**Information tab**
+
+<img src="screenshots/information.png" alt="The Information tab with the recommended setup" width="860">
+
+*The addresses in the screenshots are examples.*
 
 ## Requirements
 
