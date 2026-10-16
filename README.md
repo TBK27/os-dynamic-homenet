@@ -55,9 +55,9 @@ This plugin watches for those changes and updates the list for you.
 - OPNsense with Intrusion Detection (Suricata) enabled
 - An interface that receives a delegated IPv6 prefix (DHCPv6-PD) and/or an IPv4 address to follow
 
-Developed on **OPNsense 26.7.6** and tested on **26.7.6 and 26.7.7** with **Suricata 8.0.7** (IPS mode, netmap),
-including real
-prefix changes from a provider. The plugin only uses core plugin hooks, but other versions are untested.
+Developed on **OPNsense 26.7.6** and tested on **26.7.6 and 26.7.7** with **Suricata 8.0.7** (IPS mode,
+netmap), including real prefix changes from a provider. The plugin only uses core plugin hooks, but other
+versions are untested.
 
 ## Installation
 
