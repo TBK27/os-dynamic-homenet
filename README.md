@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="security/dynamic-homenet/pkg-descr"><img alt="Version 1.3" src="https://img.shields.io/badge/version-1.3-2ea44f"></a>
+  <a href="security/dynamic-homenet/pkg-descr"><img alt="Version 1.4" src="https://img.shields.io/badge/version-1.4-2ea44f"></a>
   <a href="https://opnsense.org"><img alt="OPNsense 26.7" src="https://img.shields.io/badge/OPNsense-26.7-d94f00"></a>
   <a href="LICENSE"><img alt="License BSD 2-Clause" src="https://img.shields.io/badge/license-BSD--2--Clause-blue"></a>
 </p>
@@ -123,7 +123,7 @@ Open **Services > Intrusion Detection > Dynamic Home Network**.
 | Button | What it does |
 |---|---|
 | **Apply** | Saves the settings and updates the list if a value has changed. |
-| **Sync now** | Updates the list even if nothing seems to have changed. Use it to restore an entry you removed by hand. |
+| **Sync now** | Updates the list and reloads Suricata even if nothing seems to have changed. Use it to restore an entry you removed by hand or to retry a failed update. It can take a minute. |
 
 The page also shows the entries the plugin currently manages.
 
@@ -188,7 +188,8 @@ one synced is the sync script started, detached, through configd.
 The sync script takes a lock, compares again, replaces the plugin's own entries in the Home networks list
 (one slot for IPv6 and one for IPv4), saves, and runs `template reload OPNsense/IDS` followed by `ids reload`.
 The last synced values and the entries the plugin added are stored in its own section of `config.xml`, and
-that stored value is the only debounce.
+that stored value is the only debounce. If the render or the reload fails, the plugin forgets the last synced
+values (but keeps its entries), so the next address change or Sync now tries again.
 
 ## FAQ
 
@@ -222,6 +223,8 @@ All of them are kept in the plugin's IPv6 entry and replaced together.
   nothing to do stays silent.
 - **An entry is missing.** Press **Sync now**. It restores the plugin's entries even when no value changed.
 - **A value looks out of date.** Press **Sync now** and check the log again.
+- **The log shows "unable to ... will retry".** The Suricata update failed. The plugin retries on the next
+  address change, press **Sync now** to retry right away.
 
 When reporting a problem, include the OPNsense version, which options are ticked, and the
 `dynamic-homenet` log lines.
