@@ -56,8 +56,21 @@ function dynamichomenet_log(int $priority, string $message): void
     syslog($priority, $message);
 }
 
+/* the plugin's sync state as the plain array HomeNet works on */
+function dynamichomenet_state(DynamicHomenet $mdl): array
+{
+    $state = [];
+    foreach (['ipv6', 'ipv4'] as $family) {
+        foreach (['observed', 'owned'] as $kind) {
+            $state["{$kind}_{$family}"] = (string)$mdl->state->{"{$kind}_{$family}"};
+        }
+    }
+
+    return $state;
+}
+
 /**
- * @return bool true when the Home networks list was changed and Suricata needs a rule reload
+ * @return bool true when values were synced and Suricata needs its configuration rendered and reloaded
  */
 function dynamichomenet_update_config(bool $force): bool
 {
@@ -73,50 +86,33 @@ function dynamichomenet_update_config(bool $force): bool
         $interface = (string)$mdl->interface;
         $ids = new IDS();
         $before = (string)$ids->general->homenet;
-        $homenet = $before;
-        $dirty = false;
 
-        /* each family has its own slot in the list and is followed when its option is switched on */
-        $families = [
-            'ipv6' => [(string)$mdl->sync_ipv6 === '1', 'observedIPv6', 'prefix'],
-            'ipv4' => [(string)$mdl->sync_ipv4 === '1', 'observedIPv4', 'address'],
-        ];
-
-        foreach ($families as $family => [$enabled, $fetch, $what]) {
-            if (!$enabled) {
-                continue;
-            }
-
-            $observed = HomeNet::$fetch($interface);
-            if (empty($observed)) {
-                /* ifctl clears the prefix during a reconfigure, keep what we have until a new one shows up */
-                dynamichomenet_log(LOG_DEBUG, "{$family}: nothing observed on {$interface}, keeping current entries");
-                continue;
-            }
-
-            $last = (string)$mdl->state->{"observed_{$family}"};
-            if (!$force && !HomeNet::hasChanged($observed, $last)) {
-                dynamichomenet_log(LOG_DEBUG, "{$family}: {$what} on {$interface} unchanged, nothing to do");
-                continue;
-            }
-
-            list ($homenet, $owned) = HomeNet::replaceOwned(
-                $homenet,
-                HomeNet::parseList((string)$mdl->state->{"owned_{$family}"}),
-                $observed
-            );
-
-            $mdl->state->{"observed_{$family}"} = implode(',', $observed);
-            $mdl->state->{"owned_{$family}"} = implode(',', $owned);
-            $dirty = true;
-            dynamichomenet_log(
-                LOG_NOTICE,
-                "{$interface} {$family} {$what} now " . implode(',', $observed) . ", was '{$last}'"
-            );
+        /*
+         * each family has its own slot in the list and is followed when its option is switched on,
+         * ifctl clears the prefix during a reconfigure so an empty value keeps what we have
+         */
+        $observed = [];
+        if ((string)$mdl->sync_ipv6 === '1') {
+            $observed['ipv6'] = HomeNet::observedIPv6($interface);
+        }
+        if ((string)$mdl->sync_ipv4 === '1') {
+            $observed['ipv4'] = HomeNet::observedIPv4($interface);
         }
 
-        if (!$dirty) {
+        list ($homenet, $state, $synced) = HomeNet::syncFamilies($before, dynamichomenet_state($mdl), $observed, $force);
+        if (empty($synced)) {
+            dynamichomenet_log(LOG_DEBUG, "nothing new on {$interface}, nothing to do");
             return false;
+        }
+
+        foreach ($synced as $family => $last) {
+            $mdl->state->{"observed_{$family}"} = $state["observed_{$family}"];
+            $mdl->state->{"owned_{$family}"} = $state["owned_{$family}"];
+            $what = $family === 'ipv6' ? 'prefix' : 'address';
+            dynamichomenet_log(
+                LOG_NOTICE,
+                "{$interface} {$family} {$what} now {$state["observed_{$family}"]}, was '{$last}'"
+            );
         }
 
         $homenetChanged = $homenet !== $before;
@@ -131,10 +127,37 @@ function dynamichomenet_update_config(bool $force): bool
         }
         $config->save();
 
-        return $homenetChanged && (string)$ids->general->enabled === '1';
+        /* also when the list text came out the same: a retry or Sync now must still reach Suricata */
+        return (string)$ids->general->enabled === '1';
     } catch (\Exception $e) {
         dynamichomenet_log(LOG_ERR, 'unable to update configuration: ' . $e->getMessage());
         return false;
+    } finally {
+        $config->unlock();
+    }
+}
+
+/*
+ * The new values are saved before Suricata is rendered and reloaded, so after a failure every later
+ * run would find nothing changed and never try again. Forgetting them makes the next address event
+ * (or Sync now) sync, render and reload again. Called under our lock, and Config::lock() re-reads
+ * config.xml, so only these values are cleared and nothing newer is overwritten.
+ */
+function dynamichomenet_retry_later(string $failed): void
+{
+    dynamichomenet_log(LOG_ERR, "unable to {$failed}, will retry on the next address event or with Sync now");
+    $config = Config::getInstance()->lock();
+
+    try {
+        $mdl = new DynamicHomenet();
+        $state = HomeNet::forgetObserved(dynamichomenet_state($mdl));
+        foreach (['ipv6', 'ipv4'] as $family) {
+            $mdl->state->{"observed_{$family}"} = $state["observed_{$family}"];
+        }
+        $mdl->serializeToConfig();
+        $config->save();
+    } catch (\Exception $e) {
+        dynamichomenet_log(LOG_ERR, 'unable to reset the sync state: ' . $e->getMessage());
     } finally {
         $config->unlock();
     }
@@ -151,11 +174,19 @@ if (dynamichomenet_update_config(in_array('--force', $argv ?? [], true))) {
     $backend = new Backend();
     /* same sequence as the Apply button on the Intrusion Detection rules page: render, then reload */
     if (trim($backend->configdRun('template reload OPNsense/IDS')) !== 'OK') {
-        dynamichomenet_log(LOG_ERR, 'unable to render the Intrusion Detection template');
+        dynamichomenet_retry_later('render the Intrusion Detection template');
         exit(1);
     }
+    /*
+     * Installing the rules can take longer than configd's default 120 s on a big ruleset, which would
+     * read as a failure. Suricata reloads in the background after this returns, a reload started by
+     * anyone else in the next minutes can still overlap with it (the same holds for core's Apply).
+     */
     if (strpos($backend->configdRun('ids status'), 'is running') > 0) {
-        $backend->configdRun('ids reload');
+        if (trim($backend->configdRun('ids reload', false, 600)) !== 'OK') {
+            dynamichomenet_retry_later('reload the Suricata rules');
+            exit(1);
+        }
         dynamichomenet_log(LOG_NOTICE, 'HOME_NET updated, Suricata rules reloaded');
     } else {
         dynamichomenet_log(LOG_NOTICE, 'HOME_NET updated, Suricata is not running so no reload needed');

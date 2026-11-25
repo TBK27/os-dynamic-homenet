@@ -41,26 +41,21 @@ $(document).ready(function() {
         refreshState();
     });
 
+    /* SimpleActionButton already calls the button's data-endpoint, onAction only refreshes the table */
     $("#applyAct").SimpleActionButton({
         onPreAction: function() {
             const dfObj = $.Deferred();
             saveFormToEndpoint("/api/dynamichomenet/settings/set", 'frm_GeneralSettings', dfObj.resolve, true, dfObj.reject);
             return dfObj;
         },
-        onAction: function(data, status) {
-            if (status === "success" && data.status === 'ok') {
-                ajaxCall("/api/dynamichomenet/service/sync", {}, function() {
-                    refreshState();
-                });
-            }
+        onAction: function() {
+            refreshState();
         }
     });
 
     $("#forceAct").SimpleActionButton({
         onAction: function() {
-            ajaxCall("/api/dynamichomenet/service/force", {}, function() {
-                refreshState();
-            });
+            refreshState();
         }
     });
 });

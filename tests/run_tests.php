@@ -97,5 +97,72 @@ check('v6 change leaves v4 slot alone', $admin . ',203.0.113.99/32,2001:db8:9900
 list ($untouched) = HomeNet::replaceOwned($admin, ['192.168.0.0/16'], []);
 check('previously owned entry removed even when nothing new', '10.0.0.0/8,172.16.0.0/12', $untouched);
 
+/* syncFamilies: the debounce and the force of one sync pass */
+$empty = ['observed_ipv6' => '', 'owned_ipv6' => '', 'observed_ipv4' => '', 'owned_ipv4' => ''];
+$both = ['ipv6' => ['2001:db8:1200::/56'], 'ipv4' => ['203.0.113.7']];
+list ($first, $firstState, $firstSynced) = HomeNet::syncFamilies($admin, $empty, $both, false);
+check('first pass adds both families', $admin . ',2001:db8:1200::/56,203.0.113.7/32', $first);
+check('first pass syncs both families', ['ipv6' => '', 'ipv4' => ''], $firstSynced);
+list (, , $idle) = HomeNet::syncFamilies($first, $firstState, $both, false);
+check('unchanged pass syncs nothing', [], $idle);
+list ($forced, $forcedState, $forcedSynced) = HomeNet::syncFamilies($first, $firstState, $both, true);
+check('forced pass syncs both (Sync now always renders)', ['ipv6', 'ipv4'], array_keys($forcedSynced));
+check('forced pass keeps list and state', [$first, $firstState], [$forced, $forcedState]);
+list (, , $unknown) = HomeNet::syncFamilies($first, $firstState, ['ipv6' => [], 'ipv4' => []], true);
+check('nothing observed leaves everything alone, even forced', [], $unknown);
+
+/*
+ * Regression: a failed render or reload must be retried. The new value is saved before Suricata is
+ * rendered and reloaded, so without forgetObserved() every later run found nothing changed.
+ */
+$moved = ['ipv6' => ['2001:db8:9900::/56'], 'ipv4' => ['203.0.113.7']];
+
+/* 1. the delegated prefix changes */
+list ($afterMove, $afterMoveState, $moveSynced) = HomeNet::syncFamilies($first, $firstState, $moved, false);
+check('retry: prefix change synced', ['ipv6' => '2001:db8:1200::/56'], $moveSynced);
+check('retry: prefix change replaced in list', $admin . ',203.0.113.7/32,2001:db8:9900::/56', $afterMove);
+
+/* 2. the render or reload fails */
+$failedState = HomeNet::forgetObserved($afterMoveState);
+
+/* 3. both observed values blank, ownership unchanged */
+check('retry: both observed values blank', ['', ''], [$failedState['observed_ipv6'], $failedState['observed_ipv4']]);
+check(
+    'retry: ownership unchanged',
+    [$afterMoveState['owned_ipv6'], $afterMoveState['owned_ipv4']],
+    [$failedState['owned_ipv6'], $failedState['owned_ipv4']]
+);
+check(
+    'retry: hook sees a change again for both families',
+    [true, true],
+    [HomeNet::hasChanged($moved['ipv6'], $failedState['observed_ipv6']), HomeNet::hasChanged($moved['ipv4'], $failedState['observed_ipv4'])]
+);
+
+/* 4. the next run (hook or Sync now, same interface values) */
+list ($retried, $retriedState, $retrySynced) = HomeNet::syncFamilies($afterMove, $failedState, $moved, false);
+
+/* 5. correct Home networks restored and the retry completes */
+check('retry: both families synced again, so it renders and reloads', ['ipv6', 'ipv4'], array_keys($retrySynced));
+check(
+    'retry: correct Home networks (order may differ)',
+    HomeNet::normalizeSet(HomeNet::parseList($admin . ',2001:db8:9900::/56,203.0.113.7/32')),
+    HomeNet::normalizeSet(HomeNet::parseList($retried))
+);
+check('retry: old prefix gone', false, in_array('2001:db8:1200::/56', HomeNet::parseList($retried), true));
+check('retry: state identical to a successful sync', $afterMoveState, $retriedState);
+list (, , $settled) = HomeNet::syncFamilies($retried, $retriedState, $moved, false);
+check('retry: completed, the run after it has nothing to do', [], $settled);
+
+/* only one family followed: forgetting both values never touches the other family's entry */
+$v6only = HomeNet::forgetObserved($afterMoveState);
+list ($v6list, $v6state) = HomeNet::syncFamilies($afterMove, $v6only, ['ipv6' => $moved['ipv6']], false);
+check('retry: unfollowed family keeps its owned entry', '203.0.113.7/32', $v6state['owned_ipv4']);
+check('retry: unfollowed family keeps its list entry', true, in_array('203.0.113.7/32', HomeNet::parseList($v6list), true));
+
+/* interface has nothing yet at the retry (reconfigure): nothing touched, retry stays armed */
+list ($waiting, $waitingState) = HomeNet::syncFamilies($afterMove, $failedState, ['ipv6' => [], 'ipv4' => []], false);
+check('retry: no value yet leaves the list alone', $afterMove, $waiting);
+check('retry: no value yet keeps the retry armed', $failedState, $waitingState);
+
 echo $failures === 0 ? "OK: {$count} checks passed\n" : "{$failures} of {$count} checks FAILED\n";
 exit($failures === 0 ? 0 : 1);

@@ -147,6 +147,54 @@ class HomeNet
         return [implode(',', $kept), $owned];
     }
 
+    /**
+     * One sync pass over the followed address families.
+     *
+     * $state holds "observed_<family>" (the value synced last) and "owned_<family>" (the entries we
+     * inserted) per family. $observed holds what the interface has now for every family that is
+     * followed, an empty list means "unknown right now" and leaves that family alone. A family is
+     * synced when its value differs from the last synced one, or always when $force is set.
+     *
+     * @return array [new list, new state, [family => value synced before] for every family synced]
+     */
+    public static function syncFamilies(string $homenet, array $state, array $observed, bool $force): array
+    {
+        $synced = [];
+        foreach ($observed as $family => $values) {
+            $last = (string)($state["observed_{$family}"] ?? '');
+            if (empty($values) || (!$force && !self::hasChanged($values, $last))) {
+                continue;
+            }
+
+            list ($homenet, $owned) = self::replaceOwned(
+                $homenet,
+                self::parseList((string)($state["owned_{$family}"] ?? '')),
+                $values
+            );
+            $state["observed_{$family}"] = implode(',', $values);
+            $state["owned_{$family}"] = implode(',', $owned);
+            $synced[$family] = $last;
+        }
+
+        return [$homenet, $state, $synced];
+    }
+
+    /**
+     * After a failed render or reload: forget the values synced last (of every family) so the next
+     * run syncs and renders again. Ownership is kept on purpose, with it that run swaps our entries
+     * in place instead of mistaking them for entries the administrator added.
+     */
+    public static function forgetObserved(array $state): array
+    {
+        foreach (array_keys($state) as $key) {
+            if (strpos($key, 'observed_') === 0) {
+                $state[$key] = '';
+            }
+        }
+
+        return $state;
+    }
+
     /* ---- system access (needs the OPNsense legacy includes loaded) ---- */
 
     /**
